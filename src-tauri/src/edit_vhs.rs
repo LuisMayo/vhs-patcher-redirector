@@ -1,5 +1,5 @@
 use std::{
-    fs::File,
+    fs::{File, OpenOptions},
     iter::repeat,
     os::windows::prelude::FileExt,
     path::PathBuf,
@@ -23,23 +23,24 @@ fn success() {
     println!("ole ole los caracoles");
 }
 
-fn process_vhs_file(file_path: &PathBuf) {
+fn process_vhs_file(game_dir: &PathBuf, address: &str) {
+    let file_path = game_dir.join("Game/Binaries/Win64/Game-Win64-Shipping.exe");
     let mut backup_path = file_path.clone();
-    backup_path.set_extension(".bak");
+    backup_path.set_extension("bak");
     let _ = std::fs::copy(&file_path, &backup_path);
-    let file_result = File::open(&file_path);
+    let file_result = OpenOptions::new().write(true).open(&file_path);
     match file_result {
-        Ok(file) => write_file(file),
+        Ok(file) => write_file(file, address),
         Err(_) => unable_open_file(),
     }
 }
 
-fn write_file(file: File) {
+fn write_file(file: File, address: &str) {
     const BUFFER_SIZE: usize = 0x80;
     let address = "https://apps.luismayo.com/vhs-%s/%s/%s/?guid=%s";
     let mut buffer: Vec<u8> = address
         .encode_utf16()
-        .map(|item| item.to_be_bytes())
+        .map(|item| item.to_le_bytes())
         .flatten()
         .collect();
     if buffer.len() > BUFFER_SIZE {
@@ -52,11 +53,12 @@ fn write_file(file: File) {
     }
 }
 
-fn main() {
+#[tauri::command]
+fn edit_vhs_file(address: &str) {
     println!("Hello, world!");
     match SteamDir::locate() {
         Some(mut steamdir) => match steamdir.app(&611360) {
-            Some(app) => process_vhs_file(&app.path),
+            Some(app) => process_vhs_file(&app.path, address),
             None => unable_locate_dir(),
         },
         None => unable_locate_dir(),

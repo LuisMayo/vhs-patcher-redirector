@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="/src/styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VHS Redirector</title>
+    <script type="module" src="/src/main.ts" defer></script>
+  </head>
+
+  <body>
+    <div class="container">
+      <h1>VHS Redirector</h1>
+
+
+      <p>Choose what server do you want to use</p>
+
+      <form id="form">
+        <div>
+          <input type="radio" id="huey" name="server" value="main" checked />
+          <label for="huey">Official END Server</label>
+        </div>
+        <div>
+          <input type="radio" id="self" name="server" value="self" checked />
+          <label for="self">Self-host</label>
+        </div>
+        <div>
+          <input type="radio" id="other" name="server" value="other" checked />
+          <label for="other">Custom Server</label>
+          <input/>
+        </div>
+        <button type="submit">Greet</button>
+      </form>
+
+      <p id="greet-msg"></p>
+    </div>
+  </body>
+</html>
