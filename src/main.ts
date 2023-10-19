@@ -12,6 +12,13 @@ async function greet() {
   }
 }
 
+async function onSubmit(ev: SubmitEvent) {
+  ev.preventDefault();
+  await invoke("address", {
+    name: greetInputEl.value,
+  });
+}
+
 window.addEventListener("DOMContentLoaded", () => {
   greetInputEl = document.querySelector("#greet-input");
   greetMsgEl = document.querySelector("#greet-msg");
