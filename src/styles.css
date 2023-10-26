@@ -117,3 +117,7 @@ button {
   align-items: flex-start;
   margin: auto;
 }
+
+#other-text:disabled {
+  background-color: lightgray;
+}

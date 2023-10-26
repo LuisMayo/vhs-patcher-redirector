@@ -33,7 +33,6 @@ fn process_vhs_file(game_dir: &PathBuf, address: &str) -> Result<(), &'static st
 
 fn write_file(file: File, address: &str) -> Result<(), &'static str> {
     const BUFFER_SIZE: usize = 0x80;
-    let address = "https://apps.luismayo.com/vhs-%s/%s/%s/?guid=%s";
     let mut buffer: Vec<u8> = address
         .encode_utf16()
         .map(|item| item.to_le_bytes())
@@ -51,7 +50,7 @@ fn write_file(file: File, address: &str) -> Result<(), &'static str> {
 
 #[tauri::command]
 pub fn edit_vhs_file(address: &str) -> Result<(), &str> {
-    println!("Hello, world!");
+    println!("Hello, world! {}", address);
     match SteamDir::locate() {
         Some(mut steamdir) => match steamdir.app(&611360) {
             Some(app) => return process_vhs_file(&app.path, address),

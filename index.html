@@ -14,19 +14,19 @@
 
       <p>Choose what server do you want to use</p>
 
-      <form id="form" onsubmit="">
+      <form id="form">
         <div>
-          <input type="radio" id="huey" name="server" value="main" checked />
-          <label for="huey">Official END Server</label>
+          <input type="radio" id="offial" name="server" value="main" checked />
+          <label for="offial">Official END Server</label>
         </div>
         <div>
-          <input type="radio" id="self" name="server" value="self" checked />
+          <input type="radio" id="self" name="server" value="self" />
           <label for="self">Self-host</label>
         </div>
         <div>
-          <input type="radio" id="other" name="server" value="other" checked />
-          <label for="other">Custom Server</label>
-          <input/>
+          <input type="radio" id="other" name="server" value="other" />
+          <label for="other">Custom Server: </label>
+          <input id="other-text" disabled/>
         </div>
         <button type="submit">Greet</button>
       </form>

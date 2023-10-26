@@ -1,29 +1,41 @@
 import { invoke } from "@tauri-apps/api/tauri";
 
-let greetInputEl: HTMLInputElement | null;
-let greetMsgEl: HTMLElement | null;
-
-async function greet() {
-  if (greetMsgEl && greetInputEl) {
-    // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-    greetMsgEl.textContent = await invoke("greet", {
-      name: greetInputEl.value,
-    });
+function onSubmit(ev: Event) {
+  ev.preventDefault();
+  const selected: string = document.forms.namedItem('form')!.server.value;
+  let url: string | undefined;
+  switch(selected) {
+    case 'self':
+      url = "http://localhost:12478/vhs-%s/%s/%s/?guid=%s";
+      break;
+    case 'other':
+      url = (document.getElementById('other-text') as HTMLInputElement | null)?.value
+      break;
+    case 'main':
+    default:
+      url = "https://apps.luismayo.com/vhs-%s/%s/%s/?guid=%s"
+  }
+  if (url == null || url.trim().length === 0) {
+    alert("URL is empty");
+  } else {
+    invoke("edit_vhs_file", {
+      adress: url,
+    }).then(() => alert("Server set succesfully!")).catch(alert);
   }
 }
 
-async function onSubmit(ev: SubmitEvent) {
-  ev.preventDefault();
-  await invoke("address", {
-    name: greetInputEl.value,
-  });
+function onFormChange() {
+  const serverIsOther = (document.getElementById('other') as HTMLInputElement | null)?.checked;
+  const textField = document.getElementById("other-text") as HTMLInputElement | null;
+  if (textField) {
+    textField.disabled = !serverIsOther;
+  }
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-  greetInputEl = document.querySelector("#greet-input");
-  greetMsgEl = document.querySelector("#greet-msg");
-  document.querySelector("#form")?.addEventListener("submit", (e) => {
-    e.preventDefault();
-    greet();
-  });
+  const form  = document.getElementById('form');
+  if (form) {
+    form.addEventListener('change', onFormChange);
+    form.addEventListener('submit', onSubmit);
+  }
 });
