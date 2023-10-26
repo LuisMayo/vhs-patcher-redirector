@@ -19,7 +19,7 @@ function onSubmit(ev: Event) {
     alert("URL is empty");
   } else {
     invoke("edit_vhs_file", {
-      adress: url,
+      address: url,
     }).then(() => alert("Server set succesfully!")).catch(alert);
   }
 }
