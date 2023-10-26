@@ -682,6 +682,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "file_offset"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4ad02ed760f100d78f087138613184d8e48d301c97f13804e250773d649900cd"
+
+[[package]]
 name = "filetime"
 version = "0.2.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3293,12 +3299,12 @@ checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
 name = "vhs-linux-redirector"
 version = "0.0.0"
 dependencies = [
+ "file_offset",
  "serde",
  "serde_json",
  "steamlocate",
  "tauri",
  "tauri-build",
- "thiserror",
 ]
 
 [[package]]
