@@ -1,5 +1,6 @@
 # VHS Server Patcher
 ![image](https://github.com/LuisMayo/vhs-patcher-redirector/assets/20229636/134f20ff-d87d-46d4-98d4-e2d668e982a3)
+
 An app to patch your Video Horror Society Steam installation to use private/communiy servers, including the END server. More info here: https://github.com/LuisMayo/vhs-alternative-server/
 This is intendend for Linux users (or for Windows Users who are developers of the server). If you're a windows user please check the Hosts redirecton app: https://github.com/SkelXton/VHS-Redirector-Scripts/
 
