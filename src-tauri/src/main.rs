@@ -6,7 +6,7 @@ mod edit_vhs;
 
 fn main() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![edit_vhs::edit_vhs_file])
+        .invoke_handler(tauri::generate_handler![edit_vhs::edit_vhs_file, edit_vhs::restore_backup_handler])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

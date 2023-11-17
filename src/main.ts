@@ -32,10 +32,19 @@ function onFormChange() {
   }
 }
 
+function onRestore() {
+  invoke("restore_backup_handler").then(() => alert("Backup restored succesfully. Remember you can verify files on Steam"))
+  .catch(alert);
+}
+
 window.addEventListener("DOMContentLoaded", () => {
   const form  = document.getElementById('form');
   if (form) {
     form.addEventListener('change', onFormChange);
     form.addEventListener('submit', onSubmit);
+  }
+  const restoreButton = document.getElementById('restore');
+  if (restoreButton) {
+    restoreButton.addEventListener('click', onRestore);
   }
 });

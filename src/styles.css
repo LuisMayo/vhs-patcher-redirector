@@ -24,17 +24,6 @@
   align-items: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: 0.75s;
-}
-
-.logo.tauri:hover {
-  filter: drop-shadow(0 0 2em #24c8db);
-}
-
 .row {
   display: flex;
   justify-content: center;
@@ -120,4 +109,11 @@ button {
 
 #other-text:disabled {
   background-color: lightgray;
+}
+
+
+.buttons {
+  margin-top: 7px;
+  width: 100%;
+  justify-content: space-evenly;
 }
