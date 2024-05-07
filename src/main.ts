@@ -49,11 +49,13 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-invoke<{success: boolean, msg: string}[]>('init').then((msgs) => {
-  const container = document.getElementById('msg-container')!;
-  for (const msg of msgs) {
-    const span = document.createElement('div');
-    span.textContent = (msg.success ? '✅ ' : '❌ ') + msg.msg;
-    container.appendChild(span);
-  }
-})
+setTimeout(() => {
+  invoke<{success: boolean, msg: string}[]>('init').then((msgs) => {
+    const container = document.getElementById('msg-container')!;
+    for (const msg of msgs) {
+      const span = document.createElement('div');
+      span.textContent = (msg.success ? '✅ ' : '❌ ') + msg.msg;
+      container.appendChild(span);
+    }
+  });
+}, 0)

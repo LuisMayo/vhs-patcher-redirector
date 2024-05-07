@@ -7,7 +7,6 @@ use std::{
 use file_offset::FileExt;
 use steamlocate::SteamDir;
 
-
 fn unable_open_file() -> String {
     return "Couldn't open VHS file, make sure the game is closed and current user has write permissions".to_string();
 }
@@ -18,8 +17,14 @@ fn string_to_big() -> String {
 
 pub fn make_all_backups() -> Result<String, String> {
     let path = get_steamdir()?;
-    move_backup(&path.join("Game/Binaries/Win64/Game-Win64-Shipping.exe"), false)?;
-    move_backup(&path.join("Game/Binaries/Win64/RedpointEOS/EOSSDK-Win64-Shipping.dll"), false)?;
+    move_backup(
+        &path.join("Game/Binaries/Win64/Game-Win64-Shipping.exe"),
+        false,
+    )?;
+    move_backup(
+        &path.join("Game/Binaries/Win64/RedpointEOS/EOSSDK-Win64-Shipping.dll"),
+        false,
+    )?;
     move_backup(&path.join("VideoHorrorSociety.exe"), false)?;
     Ok("Backups made".to_string())
 }
@@ -32,7 +37,9 @@ fn restore_all_backups() -> Result<String, String> {
     Ok("Backups restored".to_string())
 }
 
-fn process_vhs_file(file_path: &PathBuf, address: &str) -> Result<(), String> {
+#[cfg(target_os = "linux")]
+fn process_vhs_file(path: &PathBuf, address: &str) -> Result<(), String> {
+    let file_path = path.join("Game/Binaries/Win64/Game-Win64-Shipping.exe");
     if let Err(value) = move_backup(&file_path, false) {
         return Err(value.to_string());
     }
@@ -42,6 +49,12 @@ fn process_vhs_file(file_path: &PathBuf, address: &str) -> Result<(), String> {
         Err(_) => return Err(unable_open_file()),
     }
 }
+
+#[cfg(target_os = "windows")]
+fn process_vhs_file(file_path: &PathBuf, address: &str) -> Result<(), Box<dyn std::error::Error>> {
+    
+}
+
 
 /// returns the backup path, if any
 fn move_backup(file_path: &PathBuf, restore: bool) -> Result<PathBuf, String> {
@@ -55,7 +68,7 @@ fn move_backup(file_path: &PathBuf, restore: bool) -> Result<PathBuf, String> {
                     let copy_result = std::fs::copy(&backup_path, file_path);
                     match copy_result {
                         Ok(_) => return Ok(backup_path),
-                        Err(_) => return Err("Error restoring backup".to_string())
+                        Err(_) => return Err("Error restoring backup".to_string()),
                     }
                 } else {
                     return Err("Backup not found".to_string());
@@ -64,12 +77,12 @@ fn move_backup(file_path: &PathBuf, restore: bool) -> Result<PathBuf, String> {
                 let copy_result = std::fs::copy(file_path, &backup_path);
                 match copy_result {
                     Ok(_) => return Ok(backup_path),
-                    Err(_) => return Err("Error making/restoring backup".to_string())
+                    Err(_) => return Err("Error making/restoring backup".to_string()),
                 }
-            } 
+            }
             return Ok(backup_path);
-        },
-        Err(_) => return Err("Error locating backup".to_string())
+        }
+        Err(_) => return Err("Error locating backup".to_string()),
     }
 }
 
@@ -93,7 +106,9 @@ fn write_file(file: File, address: &str) -> Result<(), String> {
 fn get_steamdir() -> Result<PathBuf, String> {
     let steamdirs = SteamDir::locate_multiple().unwrap_or_default();
     if steamdirs.len() == 0 {
-        return Err("Couldn't find Steam Location. Steam must be installed for this to work".to_string());
+        return Err(
+            "Couldn't find Steam Location. Steam must be installed for this to work".to_string(),
+        );
     } else {
         let mut found_dir: Option<PathBuf> = None;
         for dir in steamdirs {
@@ -107,23 +122,16 @@ fn get_steamdir() -> Result<PathBuf, String> {
         }
         match found_dir {
             Some(path) => return Ok(path),
-            None => return Err("Couldn't find install path, is VHS installed?".to_string())
+            None => return Err("Couldn't find install path, is VHS installed?".to_string()),
         }
     }
-}
-
-fn get_gamedir() -> Result<PathBuf, String> {
-     match get_steamdir() {
-        Ok(path) => return Ok(path.join("Game/Binaries/Win64/Game-Win64-Shipping.exe")),
-        Err(err) => return Err(err)
-     }
 }
 
 #[tauri::command]
 pub fn edit_vhs_file(address: &str) -> Result<(), String> {
     println!("Hello, world! {}", address);
-    match get_gamedir() {
-        Ok(app) => return process_vhs_file(&app, address),
+    match get_steamdir() {
+        Ok(app) => return process_vhs_file(&app, address).into(),
         Err(err) => return Err(err),
     }
 }
@@ -132,7 +140,7 @@ fn restore_backup(path: &PathBuf) -> Result<(), String> {
     let backup_path = move_backup(&path, true)?;
     match std::fs::remove_file(backup_path) {
         Ok(_) => return Ok(()),
-        Err(_) => return Err("Backup restored. Failed at removing it".to_string())
+        Err(_) => return Err("Backup restored. Failed at removing it".to_string()),
     };
 }
 

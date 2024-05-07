@@ -1,16 +1,20 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use admin_check::admin_check;
 use edit_vhs::make_all_backups;
 use replies::GameMsg;
 
 mod edit_vhs;
 mod clean_up;
 mod replies;
+mod admin_check;
+mod my_error;
+
 
 #[tauri::command]
 fn init() -> Vec<GameMsg>  {
-    let results = [clean_up::clean_old_methods(), make_all_backups()];
+    let results = [clean_up::clean_old_methods(), make_all_backups(), admin_check()];
     let map: Vec<GameMsg> = results.into_iter().map(|result| {
         match result {
             Ok(msg) =>GameMsg{success: true, msg },
