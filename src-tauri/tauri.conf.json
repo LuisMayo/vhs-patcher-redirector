@@ -28,6 +28,9 @@
     },
     "bundle": {
       "active": true,
+      "resources": [
+        "resources/*"
+      ],
       "targets": "all",
       "identifier": "org.evil-never-dies.vhs-server-redirector",
       "icon": [

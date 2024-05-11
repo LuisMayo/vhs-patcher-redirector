@@ -1,6 +1,5 @@
 use std::fmt::Display;
 
-
 #[derive(Debug)]
 pub(crate) struct MyError {
     pub msg: String,
