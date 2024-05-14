@@ -7,7 +7,7 @@
     "withGlobalTauri": true
   },
   "package": {
-    "productName": "vhs-linux-redirector",
+    "productName": "vhs-server-patcher",
     "version": "0.0.0"
   },
   "tauri": {
@@ -28,6 +28,9 @@
     },
     "bundle": {
       "active": true,
+      "resources": [
+        "resources/*"
+      ],
       "targets": "all",
       "identifier": "org.evil-never-dies.vhs-server-redirector",
       "icon": [
@@ -45,9 +48,9 @@
       {
         "fullscreen": false,
         "resizable": true,
-        "title": "vhs-linux-redirector",
+        "title": "vhs-server-patcher",
         "width": 520,
-        "height": 500
+        "height": 550
       }
     ]
   }
