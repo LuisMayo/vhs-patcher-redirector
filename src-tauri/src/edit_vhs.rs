@@ -1,4 +1,5 @@
 use std::{
+    env,
     fs::{self, File, OpenOptions},
     iter::repeat,
     path::PathBuf,
@@ -8,6 +9,7 @@ use file_offset::FileExt;
 use fs_extra::dir::CopyOptions;
 use mktemp::Temp;
 use steamlocate::SteamDir;
+use crate::RESOURCE_PATH;
 
 fn unable_open_file() -> String {
     return "Couldn't open VHS file, make sure the game is closed and current user has write permissions".to_string();
@@ -79,11 +81,7 @@ fn modify_hosts_file(address: &str) -> Result<String, Box<dyn std::error::Error>
 
 #[cfg(target_os = "windows")]
 fn remove_hosts_file_edit() -> Result<String, Box<dyn std::error::Error>> {
-    use std::{
-        fs,
-        io::{Read, Write},
-        path::Path,
-    };
+    use std::{io::Read, path::Path};
 
     let path = Path::new("C:/Windows/System32/drivers/etc");
     if path.try_exists()? {
@@ -107,10 +105,6 @@ fn remove_hosts_file_edit() -> Result<String, Box<dyn std::error::Error>> {
 
 #[cfg(target_os = "windows")]
 fn add_certificate(file_path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
-    use std::fs;
-
-    use crate::RESOURCE_PATH;
-
     let path = file_path.join("Game/Content/Certificates");
     fs::create_dir_all(&path)?;
     let resource_lock = RESOURCE_PATH.read()?;
@@ -139,24 +133,59 @@ fn remove_certificate(file_path: &PathBuf) -> Result<(), String> {
     };
 }
 
-async fn add_modded_EOS(file_path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
-    use std::fs;
+#[tauri::command]
+pub async fn edit_vhs_and_add_mod(address: String) -> Result<String, String> {
+    edit_vhs_file(&address)?;
+    match get_steamdir() {
+        Ok(app) => {
+            add_modded_eos(&app)?;
+            download_mod(&app).await?;
+            add_modded_launcher(&app)?;
+           return Ok("Game using our server and using mods!".to_string());
+        },
+        Err(err) => return Err(err),
+    }
+}
 
-    use crate::RESOURCE_PATH;
+fn add_modded_eos(file_path: &PathBuf) -> Result<(), String> {
+    match add_modded_eos_internal(file_path) {
+        Ok(_) => Ok(()),
+        Err(err) => Err(err.to_string()),
+    }
+}
 
+fn add_modded_launcher(file_path: &PathBuf) -> Result<(), String> {
+    match add_modded_launcher_internal(file_path) {
+        Ok(_) => Ok(()),
+        Err(err) => Err(err.to_string()),
+    }
+}
+
+fn add_modded_launcher_internal(file_path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+    let resource_lock = RESOURCE_PATH.read()?;
+    match &resource_lock.exe {
+        Some(exe_path) => {
+            fs::copy(exe_path, file_path.join("VideoHorrorSociety.exe"))?;
+            return Ok(());
+        }
+        None => return Err("Cannot find modded exe".into()),
+    }
+}
+
+
+fn add_modded_eos_internal(file_path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
     let path = file_path.join("Game/Binaries/Win64/RedpointEOS/EOSSDK-Win64-Shipping.dll");
     let resource_lock = RESOURCE_PATH.read()?;
     match &resource_lock.eos {
         Some(eos_path) => {
             fs::copy(eos_path, path)?;
-            download_mod(&file_path).await?;
             return Ok(());
         }
         None => return Err("Cannot find modded EOS".into()),
     }
 }
 
-async fn download_mod(file_path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+async fn download_mod_internal(file_path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
     let bytes = reqwest::get("https://dl.luismayo.com/smartbots.zip")
         .await?
         .bytes()
@@ -164,7 +193,12 @@ async fn download_mod(file_path: &PathBuf) -> Result<(), Box<dyn std::error::Err
     let temp_dir = Temp::new_dir()?;
     let zip_file = temp_dir.join("smartbots.zip");
     fs::write(&zip_file, bytes)?;
+    let current_dir = env::current_dir();
+    env::set_current_dir(&temp_dir)?;
     simple_zip::zip::Decompress::local_buffer(&zip_file);
+    if let Ok(old_dir) = current_dir {
+        let _ = env::set_current_dir(old_dir);
+    }
     fs::remove_file(&zip_file)?;
     fs_extra::dir::move_dir(
         &temp_dir,
@@ -177,6 +211,13 @@ async fn download_mod(file_path: &PathBuf) -> Result<(), Box<dyn std::error::Err
         },
     )?;
     return Ok(());
+}
+
+async fn download_mod(file_path: &PathBuf) -> Result<(), String> {
+    match download_mod_internal(file_path).await {
+        Ok(_) => Ok(()),
+        Err(err) => Err(err.to_string()),
+    }
 }
 
 /// returns the backup path, if any

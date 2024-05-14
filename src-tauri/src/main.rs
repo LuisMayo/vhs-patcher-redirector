@@ -58,6 +58,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             edit_vhs::edit_vhs_file,
             edit_vhs::restore_backup_handler,
+            edit_vhs::edit_vhs_and_add_mod,
             init
         ])
         .setup(|app| {
@@ -65,7 +66,9 @@ fn main() {
                 .path_resolver()
                 .resolve_resource("resources/VideoHorrorSociety.exe");
             let cert = app.path_resolver().resolve_resource("resources/cacert.pem");
-            let eos = app.path_resolver().resolve_resource("resources/EOSSDK-Win64-Shipping.dll");
+            let eos = app
+                .path_resolver()
+                .resolve_resource("resources/EOSSDK-Win64-Shipping.dll");
             let mut resource_lock = RESOURCE_PATH.write()?;
             resource_lock.certificate = cert;
             resource_lock.exe = exe;
