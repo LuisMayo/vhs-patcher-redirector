@@ -1,10 +1,12 @@
 use std::{
-    fs::{File, OpenOptions},
+    fs::{self, File, OpenOptions},
     iter::repeat,
     path::PathBuf,
 };
 
 use file_offset::FileExt;
+use fs_extra::dir::CopyOptions;
+use mktemp::Temp;
 use steamlocate::SteamDir;
 
 fn unable_open_file() -> String {
@@ -137,6 +139,46 @@ fn remove_certificate(file_path: &PathBuf) -> Result<(), String> {
     };
 }
 
+async fn add_modded_EOS(file_path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+    use std::fs;
+
+    use crate::RESOURCE_PATH;
+
+    let path = file_path.join("Game/Binaries/Win64/RedpointEOS/EOSSDK-Win64-Shipping.dll");
+    let resource_lock = RESOURCE_PATH.read()?;
+    match &resource_lock.eos {
+        Some(eos_path) => {
+            fs::copy(eos_path, path)?;
+            download_mod(&file_path).await?;
+            return Ok(());
+        }
+        None => return Err("Cannot find modded EOS".into()),
+    }
+}
+
+async fn download_mod(file_path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+    let bytes = reqwest::get("https://dl.luismayo.com/smartbots.zip")
+        .await?
+        .bytes()
+        .await?;
+    let temp_dir = Temp::new_dir()?;
+    let zip_file = temp_dir.join("smartbots.zip");
+    fs::write(&zip_file, bytes)?;
+    simple_zip::zip::Decompress::local_buffer(&zip_file);
+    fs::remove_file(&zip_file)?;
+    fs_extra::dir::move_dir(
+        &temp_dir,
+        file_path.join("Game/Binaries/Win64"),
+        &CopyOptions {
+            overwrite: true,
+            copy_inside: true,
+            content_only: true,
+            ..Default::default()
+        },
+    )?;
+    return Ok(());
+}
+
 /// returns the backup path, if any
 fn move_backup(file_path: &PathBuf, restore: bool) -> Result<PathBuf, String> {
     let mut backup_path = file_path.clone();
@@ -167,7 +209,7 @@ fn move_backup(file_path: &PathBuf, restore: bool) -> Result<PathBuf, String> {
     }
 }
 
-fn write_file(file: File, address: &str) -> Result<(), String> {
+fn write_file(file: File, address: &str) -> Result<(), Box<dyn std::error::Error>> {
     const BUFFER_SIZE: usize = 0x80;
     let mut buffer: Vec<u8> = address
         .encode_utf16()
@@ -175,7 +217,7 @@ fn write_file(file: File, address: &str) -> Result<(), String> {
         .flatten()
         .collect();
     if buffer.len() > BUFFER_SIZE {
-        return Err(string_to_big());
+        return Err(string_to_big().into());
     } else {
         buffer.extend(repeat(0).take(BUFFER_SIZE - buffer.len()));
         file.write_offset(&buffer, 0x5382CA0)
