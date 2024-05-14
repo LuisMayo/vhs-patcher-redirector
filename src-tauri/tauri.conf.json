@@ -7,7 +7,7 @@
     "withGlobalTauri": true
   },
   "package": {
-    "productName": "vhs-linux-redirector",
+    "productName": "vhs-server-patcher",
     "version": "0.0.0"
   },
   "tauri": {
@@ -48,7 +48,7 @@
       {
         "fullscreen": false,
         "resizable": true,
-        "title": "vhs-linux-redirector",
+        "title": "vhs-server-patcher",
         "width": 520,
         "height": 550
       }
