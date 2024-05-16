@@ -5,11 +5,11 @@ use std::{
     path::PathBuf,
 };
 
+use crate::RESOURCE_PATH;
 use file_offset::FileExt;
 use fs_extra::dir::CopyOptions;
 use mktemp::Temp;
 use steamlocate::SteamDir;
-use crate::RESOURCE_PATH;
 
 fn unable_open_file() -> String {
     return "Couldn't open VHS file, make sure the game is closed and current user has write permissions".to_string();
@@ -42,6 +42,7 @@ fn restore_all_backups() -> Result<String, String> {
     remove_hosts_file_edit().or(Err("Error while reverting hosts changes"))?;
     #[cfg(target_os = "windows")]
     remove_certificate(&path)?;
+    try_remove_mod_files(&path);
     Ok("Backups restored".to_string())
 }
 
@@ -141,8 +142,8 @@ pub async fn edit_vhs_and_add_mod(address: String) -> Result<String, String> {
             add_modded_eos(&app)?;
             download_mod(&app).await?;
             add_modded_launcher(&app)?;
-           return Ok("Game using our server and using mods!".to_string());
-        },
+            return Ok("Game using our server and using mods!".to_string());
+        }
         Err(err) => return Err(err),
     }
 }
@@ -171,7 +172,6 @@ fn add_modded_launcher_internal(file_path: &PathBuf) -> Result<(), Box<dyn std::
         None => return Err("Cannot find modded exe".into()),
     }
 }
-
 
 fn add_modded_eos_internal(file_path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
     let path = file_path.join("Game/Binaries/Win64/RedpointEOS/EOSSDK-Win64-Shipping.dll");
@@ -218,6 +218,14 @@ async fn download_mod(file_path: &PathBuf) -> Result<(), String> {
         Ok(_) => Ok(()),
         Err(err) => Err(err.to_string()),
     }
+}
+
+fn try_remove_mod_files(path: &PathBuf) {
+    let _ = fs::remove_file(path.join("Game/Binaries/Win64/dwmapi.dll"));
+    let _ = fs::remove_file(path.join("Game/Binaries/Win64/UE4SS.dll"));
+    let _ = fs::remove_file(path.join("Game/Binaries/Win64/UE4SS.log"));
+    let _ = fs::remove_file(path.join("Game/Binaries/Win64/UE4SS.pdb"));
+    let _ = fs::remove_dir_all(path.join("Game/Binaries/Win64/Mods"));
 }
 
 /// returns the backup path, if any
@@ -294,6 +302,7 @@ fn get_steamdir() -> Result<PathBuf, String> {
 #[tauri::command]
 pub fn edit_vhs_file(address: &str) -> Result<String, String> {
     println!("Hello, world! {}", address);
+    let _ = restore_all_backups();
     match get_steamdir() {
         Ok(app) => match process_vhs_file(&app, address) {
             Ok(_) => return Ok("Game patched".to_string()),
@@ -304,11 +313,8 @@ pub fn edit_vhs_file(address: &str) -> Result<String, String> {
 }
 
 fn restore_backup(path: &PathBuf) -> Result<(), String> {
-    let backup_path = move_backup(&path, true)?;
-    match std::fs::remove_file(backup_path) {
-        Ok(_) => return Ok(()),
-        Err(_) => return Err("Backup restored. Failed at removing it".to_string()),
-    };
+    move_backup(&path, true)?;
+    Ok(())
 }
 
 #[tauri::command]
